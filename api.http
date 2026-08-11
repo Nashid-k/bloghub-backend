@@ -1,0 +1,48 @@
+### BlogHub Publishing REST API Spec
+@baseUrl = http://localhost:5000/api
+
+### 1. User Signup
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Sarah Chen",
+  "email": "sarah@bloghub.io",
+  "password": "SecretPassword456"
+}
+
+### 2. User Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "sarah@bloghub.io",
+  "password": "SecretPassword456"
+}
+
+### 3. Get Articles List
+GET {{baseUrl}}/articles
+
+### 4. Create Article (Auth required)
+POST {{baseUrl}}/articles
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token_here>
+
+{
+  "title": "Scaling Next.js Applications with Redis",
+  "content": "Next.js server-side caching helps reduce costs...",
+  "tags": ["NextJS", "Redis", "Performance"]
+}
+
+### 5. Update Article (Author-only operation)
+PUT {{baseUrl}}/articles/123
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token_here>
+
+{
+  "title": "Scaling Next.js Applications with Redis (Updated)"
+}
+
+### 6. Delete Article (Author-only operation)
+DELETE {{baseUrl}}/articles/123
+Authorization: Bearer <your_jwt_token_here>
