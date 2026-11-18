@@ -2,7 +2,7 @@ const parsePage = (value) => {
   if (value === undefined) return 1;
   if (!/^[0-9]+$/.test(String(value))) return null;
   const page = Number(value);
-  return Number.isSafeInteger(page) && page >= 1 ? page : null;
+  return Number.isSafeInteger(page) && page >= 1 && page <= 100000 ? page : null;
 };
 
 const parseLimit = (value) => {
