@@ -89,3 +89,21 @@ test('follow relationships enforce one record per follower-author pair', () => {
     keys.follower === 1 && keys.following === 1 && options.unique === true
   )));
 });
+
+
+test('follow directory indexes support stable newest-first pagination', () => {
+  const indexes = Follow.schema.indexes();
+  assert.ok(indexes.some(([keys]) => (
+    keys.following === 1 && keys.createdAt === -1 && keys._id === -1
+  )));
+  assert.ok(indexes.some(([keys]) => (
+    keys.follower === 1 && keys.createdAt === -1 && keys._id === -1
+  )));
+});
+
+test('bounds public author directory pagination inputs', () => {
+  assert.equal(parsePage('100000'), 100000);
+  assert.equal(parsePage('100001'), 100001);
+  assert.equal(parseLimit('20'), 20);
+  assert.equal(parseLimit('21'), 20);
+});
