@@ -19,8 +19,9 @@ const decodeCommentCursor = (cursor) => {
 
 const normalizeCommentLimit = (rawLimit) => {
   if (rawLimit === undefined) return 50;
-  const parsed = Number.parseInt(rawLimit, 10);
-  return Number.isInteger(parsed) ? Math.min(Math.max(parsed, 1), 50) : null;
+  if (!/^[0-9]+$/.test(String(rawLimit))) return null;
+  const parsed = Number(rawLimit);
+  return Number.isSafeInteger(parsed) && parsed >= 1 ? Math.min(parsed, 50) : null;
 };
 
 module.exports = { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit };
