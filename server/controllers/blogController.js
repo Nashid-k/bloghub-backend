@@ -7,7 +7,7 @@ const regexSpecialCodes = new Set([46, 42, 43, 63, 94, 36, 123, 125, 40, 41, 124
 const escapeRegex = (value) => [...value].map((character) => (
   regexSpecialCodes.has(character.charCodeAt(0)) ? String.fromCharCode(92) + character : character
 )).join('');
-const readingTimeFor = (content) => Math.max(1, Math.ceil(String(content || '').trim().split(/\\s+/).filter(Boolean).length / 220));
+const readingTimeFor = (content) => Math.max(1, Math.ceil(String(content || '').trim().split(/\s+/).filter(Boolean).length / 220));
 const makeSlug = (title) => (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'story') + '-' + new mongoose.Types.ObjectId().toString().slice(-6);
 
 exports.getAllBlogs = async (req, res) => {
