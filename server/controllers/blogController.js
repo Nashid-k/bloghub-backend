@@ -27,7 +27,7 @@ exports.getAllBlogs = async (req, res) => {
       ] });
     }
     const [items, total] = await Promise.all([
-      Blog.find(filter).populate('author', 'name').sort({ publishedAt: -1, createdAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Blog.find(filter).select('-likes').populate('author', 'name').sort({ publishedAt: -1, createdAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
       Blog.countDocuments(filter),
     ]);
     return res.json({ items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
@@ -60,7 +60,9 @@ exports.getBlogsById = async (req, res) => {
   try {
     const blog = await Blog.findOne({ _id: req.params.id, $or: [{ status: 'published' }, { status: { $exists: false } }] }).populate('author', 'name').lean();
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
-    return res.json(blog);
+    const likesCount = blog.likes?.length || 0;
+    delete blog.likes;
+    return res.json({ ...blog, likesCount });
   } catch {
     return res.status(500).json({ error: 'Unable to load this story right now.' });
   }
