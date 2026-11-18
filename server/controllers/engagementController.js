@@ -6,6 +6,25 @@ const User = require('../models/User');
 const validId = (id) => mongoose.isValidObjectId(id);
 const publishedFilter = { $or: [{ status: 'published' }, { status: { $exists: false } }] };
 
+
+exports.getEngagement = async (req, res) => {
+  if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid story ID.' });
+  try {
+    const [blog, user] = await Promise.all([
+      Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('likes').lean(),
+      User.findById(req.user._id).select('bookmarks').lean(),
+    ]);
+    if (!blog) return res.status(404).json({ error: 'Story not found.' });
+    const userId = req.user._id.toString();
+    return res.json({
+      liked: (blog.likes || []).some((id) => id.toString() === userId),
+      bookmarked: (user?.bookmarks || []).some((id) => id.toString() === req.params.id),
+    });
+  } catch {
+    return res.status(500).json({ error: 'Unable to load your story preferences.' });
+  }
+};
+
 exports.toggleLike = async (req, res) => {
   if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid story ID.' });
   try {
