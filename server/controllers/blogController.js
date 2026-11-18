@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const { validatePost } = require('../utils/validation');
-const escapeRegex = (value) => [...value].map((character) => ('\\\\^$.*+?()[]{}|'.includes(character) ? '\\\\' + character : character)).join('');
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\const escapeRegex = (value) => [...value].map((character) => ('\\\\^$.*+?()[]{}|'.includes(character) ? '\\\\' + character : character)).join('');');
 const readingTimeFor = (content) => Math.max(1, Math.ceil(String(content || '').trim().split(/\\s+/).filter(Boolean).length / 220));
 const makeSlug = (title) => (title.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'story') + '-' + new mongoose.Types.ObjectId().toString().slice(-6);
 exports.getAllBlogs = async (req, res) => {
@@ -45,7 +45,7 @@ exports.updateBlog = async (req, res) => {
     const payload = { title: req.body.title === undefined ? blog.title : req.body.title, content: req.body.content === undefined ? blog.content : req.body.content, excerpt: req.body.excerpt === undefined ? (blog.excerpt || '') : req.body.excerpt, tags: req.body.tags === undefined ? (blog.tags || []) : (Array.isArray(req.body.tags) ? req.body.tags.map((tag) => String(tag).trim().toLowerCase()) : req.body.tags), status: req.body.status === undefined ? (blog.status || 'published') : req.body.status };
     const validationError = validatePost(payload); if (validationError) return res.status(400).json({ error: validationError });
     const wasPublished = (blog.status || 'published') === 'published';
-    blog.title = payload.title.trim(); blog.content = payload.content.trim(); blog.excerpt = payload.excerpt.trim(); blog.tags = payload.tags; blog.status = payload.status; blog.readingTime = readingTimeFor(payload.content);
+    if (blog.title !== payload.title.trim()) blog.slug = makeSlug(payload.title);\n    blog.title = payload.title.trim(); blog.content = payload.content.trim(); blog.excerpt = payload.excerpt.trim(); blog.tags = payload.tags; blog.status = payload.status; blog.readingTime = readingTimeFor(payload.content);
     if (payload.status === 'published' && (!wasPublished || !blog.publishedAt)) blog.publishedAt = new Date();
     if (payload.status === 'draft') blog.publishedAt = null;
     await blog.save(); await blog.populate('author', 'name'); return res.json(blog);
