@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const { validatePost } = require('../utils/validation');
 
-const escapeRegex = (value) => [...value].map((character) => {
+  if ('\\^$.*+?()[]{}|'.includes(character)) return '\\' + character;
   if ('\\\\^$.*+?()[]{}|'.includes(character)) return '\\\\' + character;
   return character;
 }).join('');
