@@ -5,11 +5,11 @@ const optionalAuth = require('../middleware/optionalAuth');
 
 const {getUserProfile} = require('../controllers/userController');
 const { getBookmarks } = require('../controllers/engagementController');
-const { getPublicAuthorProfile, followAuthor, unfollowAuthor } = require('../controllers/authorController');
+const { getPublicAuthorProfile, followAuthor, unfollowAuthor, getAuthorFollowers, getAuthorFollowing } = require('../controllers/authorController');
 
 router.get('/me', auth, getUserProfile);
 router.get('/bookmarks', auth, getBookmarks);
-router.get('/:userId', optionalAuth, getPublicAuthorProfile);
+router.get('/:userId/followers', getAuthorFollowers);\nrouter.get('/:userId/following', getAuthorFollowing);\nrouter.get('/:userId', optionalAuth, getPublicAuthorProfile);
 router.post('/:userId/follow', auth, followAuthor);
 router.delete('/:userId/follow', auth, unfollowAuthor);
 
