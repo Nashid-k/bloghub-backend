@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const Comment = require('../models/Comment');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
 
 const validId = (id) => mongoose.isValidObjectId(id);
 const publishedFilter = { $or: [{ status: 'published' }, { status: { $exists: false } }] };
-
 
 exports.getEngagement = async (req, res) => {
   if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid story ID.' });
@@ -29,12 +29,31 @@ exports.getEngagement = async (req, res) => {
 exports.toggleLike = async (req, res) => {
   if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid story ID.' });
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('likes');
+    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('author');
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
-    const alreadyLiked = (blog.likes || []).some((id) => id.toString() === req.user._id.toString());
-    const update = alreadyLiked ? { $pull: { likes: req.user._id } } : { $addToSet: { likes: req.user._id } };
-    const updated = await Blog.findByIdAndUpdate(blog._id, update, { new: true }).select('likes').lean();
-    return res.json({ liked: !alreadyLiked, likesCount: updated.likes.length });
+
+    const removed = await Blog.updateOne(
+      { _id: blog._id, likes: req.user._id },
+      { $pull: { likes: req.user._id } },
+    );
+    let liked = false;
+    if (removed.modifiedCount === 0) {
+      const added = await Blog.updateOne(
+        { _id: blog._id, likes: { $ne: req.user._id } },
+        { $addToSet: { likes: req.user._id } },
+      );
+      liked = added.modifiedCount === 1;
+      if (liked && blog.author.toString() !== req.user._id.toString()) {
+        await Notification.create({
+          recipient: blog.author,
+          actor: req.user._id,
+          type: 'like',
+          story: blog._id,
+        });
+      }
+    }
+    const updated = await Blog.findById(blog._id).select('likes').lean();
+    return res.json({ liked, likesCount: updated?.likes?.length || 0 });
   } catch {
     return res.status(500).json({ error: 'Unable to update your reaction right now.' });
   }
@@ -69,8 +88,6 @@ exports.getComments = async (req, res) => {
 
     const hasMore = comments.length > limit;
     const items = hasMore ? comments.slice(0, limit) : comments;
-    // Preserve the original array response for existing clients; clients opt into
-    // cursor pagination by supplying limit or cursor.
     if (req.query.limit === undefined && req.query.cursor === undefined) return res.json(items);
 
     return res.json({
@@ -91,9 +108,18 @@ exports.createComment = async (req, res) => {
   const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
   if (!content || content.length > 2000) return res.status(400).json({ error: 'Comments must be between 1 and 2,000 characters.' });
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('_id');
+    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('author');
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
     const comment = await Comment.create({ blog: blog._id, author: req.user._id, content });
+    if (blog.author.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        recipient: blog.author,
+        actor: req.user._id,
+        type: 'comment',
+        story: blog._id,
+        comment: comment._id,
+      });
+    }
     await comment.populate('author', 'name');
     return res.status(201).json(comment);
   } catch {
@@ -121,13 +147,31 @@ exports.deleteComment = async (req, res) => {
 exports.toggleBookmark = async (req, res) => {
   if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid story ID.' });
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('_id');
+    const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('author');
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
-    const user = await User.findById(req.user._id).select('bookmarks');
-    const isBookmarked = (user.bookmarks || []).some((id) => id.toString() === blog._id.toString());
-    const update = isBookmarked ? { $pull: { bookmarks: blog._id } } : { $addToSet: { bookmarks: blog._id } };
-    const updated = await User.findByIdAndUpdate(req.user._id, update, { new: true }).select('bookmarks').lean();
-    return res.json({ bookmarked: !isBookmarked, bookmarksCount: updated.bookmarks.length });
+
+    const removed = await User.updateOne(
+      { _id: req.user._id, bookmarks: blog._id },
+      { $pull: { bookmarks: blog._id } },
+    );
+    let bookmarked = false;
+    if (removed.modifiedCount === 0) {
+      const added = await User.updateOne(
+        { _id: req.user._id, bookmarks: { $ne: blog._id } },
+        { $addToSet: { bookmarks: blog._id } },
+      );
+      bookmarked = added.modifiedCount === 1;
+      if (bookmarked && blog.author.toString() !== req.user._id.toString()) {
+        await Notification.create({
+          recipient: blog.author,
+          actor: req.user._id,
+          type: 'bookmark',
+          story: blog._id,
+        });
+      }
+    }
+    const updated = await User.findById(req.user._id).select('bookmarks').lean();
+    return res.json({ bookmarked, bookmarksCount: updated?.bookmarks?.length || 0 });
   } catch {
     return res.status(500).json({ error: 'Unable to update your reading list.' });
   }
