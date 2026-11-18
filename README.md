@@ -8,7 +8,7 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - JWT-protected endpoints with server-side user lookup
 - Create, list, read, update and delete stories
 - Draft and published states; drafts are visible only through authenticated author endpoints
-- Editorial metadata: unique slug identifier, excerpt, up to eight tags and estimated reading time
+- Editorial metadata: generated slug identifier, excerpt, up to eight tags and estimated reading time
 - Server-side ownership checks for story edits and deletion
 - Bounded server-side pagination and escaped search across title, excerpt, body and tags
 - Creator profile with published/draft counts
