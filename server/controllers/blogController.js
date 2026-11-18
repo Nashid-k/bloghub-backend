@@ -7,8 +7,11 @@ exports.getAllBlogs = async (req, res) => {
     const requestedLimit = Number.parseInt(req.query.limit, 10);
     const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 50) : 50;
     const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 100) : '';
-    const filter = search
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\    const filter = search
       ? { $or: [{ title: { $regex: search, $options: 'i' } }, { content: { $regex: search, $options: 'i' } }] }
+      : {};');
+    const filter = escapedSearch
+      ? { $or: [{ title: { $regex: escapedSearch, $options: 'i' } }, { content: { $regex: escapedSearch, $options: 'i' } }] }
       : {};
     const blogs = await Blog.find(filter)
       .populate('author', 'name')
