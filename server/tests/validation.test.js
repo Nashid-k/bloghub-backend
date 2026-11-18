@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
 const { parsePage, parseLimit } = require('../utils/authorPagination');
 const Follow = require('../models/Follow');
+const Notification = require('../models/Notification');
+const { normalizeNotificationLimit, encodeNotificationCursor, decodeNotificationCursor } = require('../utils/notificationPagination');
 const {
   normalizeEmail,
   validateRegistration,
@@ -106,4 +108,39 @@ test('bounds public author directory pagination inputs', () => {
   assert.equal(parsePage('100001'), null);
   assert.equal(parseLimit('20'), 20);
   assert.equal(parseLimit('21'), 20);
+});
+
+
+test('notification cursors preserve stable newest-first pagination keys', () => {
+  const notification = {
+    _id: new mongoose.Types.ObjectId(),
+    createdAt: new Date('2026-11-18T10:30:00.000Z'),
+  };
+  const decoded = decodeNotificationCursor(encodeNotificationCursor(notification));
+  assert.equal(decoded.id.toString(), notification._id.toString());
+  assert.equal(decoded.createdAt.toISOString(), notification.createdAt.toISOString());
+});
+
+test('notification pagination rejects malformed inputs and bounds page size', () => {
+  assert.equal(normalizeNotificationLimit(undefined), 20);
+  assert.equal(normalizeNotificationLimit('10'), 10);
+  assert.equal(normalizeNotificationLimit('500'), 50);
+  assert.equal(normalizeNotificationLimit('0'), null);
+  assert.equal(normalizeNotificationLimit('10items'), null);
+  assert.equal(decodeNotificationCursor('not-a-cursor'), null);
+  assert.equal(decodeNotificationCursor(Buffer.from(JSON.stringify({
+    createdAt: 'invalid',
+    id: 'not-an-object-id',
+  })).toString('base64url')), null);
+});
+
+test('notifications constrain event types and index recipient inbox queries', () => {
+  assert.deepEqual(Notification.schema.path('type').enumValues, ['follow', 'comment', 'like', 'bookmark']);
+  const indexes = Notification.schema.indexes();
+  assert.ok(indexes.some(([keys]) => (
+    keys.recipient === 1 && keys.createdAt === -1 && keys._id === -1
+  )));
+  assert.ok(indexes.some(([keys]) => (
+    keys.recipient === 1 && keys.readAt === 1 && keys.createdAt === -1 && keys._id === -1
+  )));
 });
