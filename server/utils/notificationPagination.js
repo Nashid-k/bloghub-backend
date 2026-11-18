@@ -5,7 +5,7 @@ const MAX_LIMIT = 50;
 
 const normalizeNotificationLimit = (value) => {
   if (value === undefined) return DEFAULT_LIMIT;
-  if (typeof value !== 'string' || !/^\\d+$/.test(value)) return null;
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return null;
   const limit = Number(value);
   if (!Number.isSafeInteger(limit) || limit < 1) return null;
   return Math.min(limit, MAX_LIMIT);
