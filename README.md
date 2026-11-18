@@ -1,18 +1,20 @@
-# BlogHub API — Express and MongoDB
+# BlogHub API — Publishing Platform Backend
 
-The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mongoose. It supports account authentication, blog CRUD and profile endpoints for the companion React frontend.
+The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mongoose. It currently provides JWT authentication, account profiles and author-owned story CRUD. The product roadmap describes the planned evolution toward a multi-author publishing platform; roadmap items are not yet implemented.
 
-## Features
+## Current capabilities
 
-- JWT-based registration and login
-- Blog creation, listing, editing and deletion
-- User profile endpoint
-- Mongoose models for users and blogs
-- Centralized route, controller and middleware modules
+- Registration and login with bcrypt password hashing
+- JWT-protected endpoints with server-side user lookup
+- Create, list, read, update and delete stories
+- Server-side ownership checks for story edits and deletion
+- Bounded story listing with optional title/content search
+- User profile and authored story listing
+- Request size and CORS origin boundaries
 
 ## Stack
 
-Node.js, Express 5, MongoDB, Mongoose, JWT, bcryptjs, dotenv and Nodemon.
+Node.js 20+, Express 5, MongoDB, Mongoose, JWT, bcryptjs, dotenv and Nodemon.
 
 ## Project layout
 
@@ -20,12 +22,13 @@ Node.js, Express 5, MongoDB, Mongoose, JWT, bcryptjs, dotenv and Nodemon.
 server/
 ├── config/db.js
 ├── controllers/
-├── middleware/auth.js
+├── middleware/
 ├── models/
 ├── routes/
+├── tests/
+├── utils/validation.js
 ├── server.js
-├── package.json
-└── .env.example
+└── package.json
 ```
 
 ## Run locally
@@ -33,32 +36,37 @@ server/
 ```bash
 git clone https://github.com/Nashid-k/bloghub-backend.git
 cd bloghub-backend/server
-npm install
+npm ci
 cp .env.example .env
 npm run dev
 ```
 
-The API defaults to port `5000`.
+The API defaults to port 5000.
 
 ## Environment
 
 | Variable | Purpose |
-| --- | --- |
-| `PORT` | API port |
-| `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used to sign and verify JWTs |
-| `CLIENT_URL` | Allowed frontend origin for CORS |
-| `NODE_ENV` | Runtime environment |
+|---|---|
+| PORT | API port |
+| MONGO_URI | MongoDB connection string |
+| JWT_SECRET | Required signing secret of at least 32 characters |
+| CLIENT_URL | Comma-separated list of allowed frontend origins |
+| NODE_ENV | Runtime environment |
 
-Never commit the local `.env` file. If a real MongoDB URI or JWT secret was present in a previously committed environment file, rotate those credentials.
+Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Never commit the resulting value.
 
 ## API routes
 
-- `/api/auth` — registration and login
-- `/api/blogs` — blog CRUD
-- `/api/users` — user profile
+- `/api/auth` — registration, login and logout response
+- `/api/blogs` — story CRUD; list supports bounded `limit` and `search` query parameters
+- `/api/users` — authenticated current-user profile
+- `/api/health` — process health
 
-## Commands
+## Quality checks
 
-- `npm run dev` — start with Nodemon
-- `npm start` — start the API
+```bash
+npm test
+node --check server.js
+```
+
+The test suite currently covers shared request validators. Database-backed integration tests and full role-based publishing workflows are planned in the BlogHub 2.0 roadmap.
