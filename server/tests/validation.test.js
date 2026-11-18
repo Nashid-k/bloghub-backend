@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
 const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
 const { parsePage, parseLimit } = require('../utils/authorPagination');
+const Follow = require('../models/Follow');
 const {
   normalizeEmail,
   validateRegistration,
@@ -80,4 +81,11 @@ test('validates public author story pagination boundaries', () => {
   assert.equal(parseLimit('200'), 20);
   assert.equal(parseLimit('0'), null);
   assert.equal(parseLimit('4items'), null);
+});
+
+test('follow relationships enforce one record per follower-author pair', () => {
+  const indexes = Follow.schema.indexes();
+  assert.ok(indexes.some(([keys, options]) => (
+    keys.follower === 1 && keys.following === 1 && options.unique === true
+  )));
 });
