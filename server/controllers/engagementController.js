@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const Comment = require('../models/Comment');
 const User = require('../models/User');
+const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
 
 const validId = (id) => mongoose.isValidObjectId(id);
 const publishedFilter = { $or: [{ status: 'published' }, { status: { $exists: false } }] };
@@ -44,8 +45,42 @@ exports.getComments = async (req, res) => {
   try {
     const blog = await Blog.findOne({ _id: req.params.id, ...publishedFilter }).select('_id');
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
-    const comments = await Comment.find({ blog: blog._id }).populate('author', 'name').sort({ createdAt: 1 }).lean();
-    return res.json(comments);
+    const limit = normalizeCommentLimit(req.query.limit);
+    if (limit === null) return res.status(400).json({ error: 'Comment limit must be a positive integer.' });
+
+    const cursor = req.query.cursor === undefined ? null : decodeCommentCursor(req.query.cursor);
+    if (req.query.cursor !== undefined && !cursor) {
+      return res.status(400).json({ error: 'Invalid comment pagination cursor.' });
+    }
+
+    const filter = { blog: blog._id };
+    if (cursor) {
+      filter.$or = [
+        { createdAt: { $gt: cursor.createdAt } },
+        { createdAt: cursor.createdAt, _id: { $gt: cursor.id } },
+      ];
+    }
+
+    const comments = await Comment.find(filter)
+      .populate('author', 'name')
+      .sort({ createdAt: 1, _id: 1 })
+      .limit(limit + 1)
+      .lean();
+
+    const hasMore = comments.length > limit;
+    const items = hasMore ? comments.slice(0, limit) : comments;
+    // Preserve the original array response for existing clients; clients opt into
+    // cursor pagination by supplying limit or cursor.
+    if (req.query.limit === undefined && req.query.cursor === undefined) return res.json(items);
+
+    return res.json({
+      items,
+      pagination: {
+        limit,
+        hasMore,
+        nextCursor: hasMore && items.length ? encodeCommentCursor(items[items.length - 1]) : null,
+      },
+    });
   } catch {
     return res.status(500).json({ error: 'Unable to load discussion.' });
   }
