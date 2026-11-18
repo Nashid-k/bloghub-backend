@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Blog = require('../models/Blog');
 const Follow = require('../models/Follow');
+const Notification = require('../models/Notification');
 
 const publishedFilter = { $or: [{ status: 'published' }, { status: { $exists: false } }] };
 const { parsePage, parseLimit } = require('../utils/authorPagination');
@@ -59,11 +60,18 @@ exports.followAuthor = async (req, res) => {
     const author = await User.findById(req.params.userId).select('_id');
     if (!author) return res.status(404).json({ error: 'Author not found.' });
 
-    await Follow.updateOne(
+    const result = await Follow.updateOne(
       { follower: req.user._id, following: author._id },
       { $setOnInsert: { follower: req.user._id, following: author._id } },
       { upsert: true },
     );
+    if (result.upsertedCount === 1) {
+      await Notification.create({
+        recipient: author._id,
+        actor: req.user._id,
+        type: 'follow',
+      });
+    }
     const followersCount = await Follow.countDocuments({ following: author._id });
     return res.json({ following: true, followersCount });
   } catch (error) {
