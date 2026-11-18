@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
+const Comment = require('../models/Comment');
 const { validatePost } = require('../utils/validation');
 
 const regexSpecialCodes = new Set([46, 42, 43, 63, 94, 36, 123, 125, 40, 41, 124, 91, 93, 92]);
 const escapeRegex = (value) => [...value].map((character) => (
   regexSpecialCodes.has(character.charCodeAt(0)) ? String.fromCharCode(92) + character : character
 )).join('');
-const readingTimeFor = (content) => Math.max(1, Math.ceil(String(content || '').trim().split(' ').filter(Boolean).length / 220));
+const readingTimeFor = (content) => Math.max(1, Math.ceil(String(content || '').trim().split(/\\s+/).filter(Boolean).length / 220));
 const makeSlug = (title) => (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'story') + '-' + new mongoose.Types.ObjectId().toString().slice(-6);
 
 exports.getAllBlogs = async (req, res) => {
@@ -136,6 +137,7 @@ exports.deleteBlog = async (req, res) => {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).json({ error: 'Story not found.' });
     if (blog.author.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'You can only delete your own stories.' });
+    await Comment.deleteMany({ blog: blog._id });
     await blog.deleteOne();
     return res.json({ message: 'Story deleted successfully.' });
   } catch {
