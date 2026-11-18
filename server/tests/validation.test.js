@@ -31,3 +31,20 @@ test('validates post title and content boundaries', () => {
   assert.match(validatePost({ title: 'A good story', content: '  ' }), /Content/);
   assert.match(validatePost({ title: 'A good story', content: 'x'.repeat(50001) }), /Content/);
 });
+
+test('accepts a valid draft with optional editorial metadata', () => {
+  assert.equal(validatePost({
+    title: 'A thoughtful draft',
+    content: 'A body with ideas',
+    excerpt: 'A short introduction',
+    tags: ['design', 'writing'],
+    status: 'draft',
+  }), null);
+});
+
+test('rejects invalid publishing states and oversized metadata', () => {
+  assert.match(validatePost({ title: 'A valid title', content: 'Body', status: 'scheduled' }), /Status/);
+  assert.match(validatePost({ title: 'A valid title', content: 'Body', excerpt: 'x'.repeat(241) }), /Excerpt/);
+  assert.match(validatePost({ title: 'A valid title', content: 'Body', tags: Array(9).fill('topic') }), /tags/i);
+  assert.match(validatePost({ title: 'A valid title', content: 'Body', tags: ['x'.repeat(25)] }), /tags/i);
+});
