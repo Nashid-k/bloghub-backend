@@ -90,4 +90,4 @@ npm test
 node --check server.js
 ```
 
-The current unit suite covers request validation. Database-backed integration tests, comment moderation, database-backed integration tests, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
+The current unit suite covers request validation. Database-backed integration tests, comment moderation, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
