@@ -8,6 +8,7 @@ const blogSchema = new mongoose.Schema({
   status: { type: String, enum: ['draft', 'published'], default: 'published', index: true },
   publishedAt: { type: Date, default: Date.now },
   readingTime: { type: Number, default: 1, min: 1 },
+  likes: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 }, { timestamps: true });
 blogSchema.index({ status: 1, publishedAt: -1, _id: -1 });
