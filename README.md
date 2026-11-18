@@ -7,9 +7,11 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Registration and login with bcrypt password hashing
 - JWT-protected endpoints with server-side user lookup
 - Create, list, read, update and delete stories
+- Draft and published states; drafts are visible only through authenticated author endpoints
+- Editorial metadata: unique slug identifier, excerpt, up to eight tags and estimated reading time
 - Server-side ownership checks for story edits and deletion
-- Bounded story listing with optional title/content search
-- User profile and authored story listing
+- Bounded server-side pagination and escaped search across title, excerpt, body and tags
+- Creator profile with published/draft counts
 - Request size and CORS origin boundaries
 
 ## Stack
@@ -58,7 +60,7 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 ## API routes
 
 - `/api/auth` — registration, login and logout response
-- `/api/blogs` — story CRUD; list supports bounded `limit` and `search` query parameters
+- `/api/blogs` — public published-story feed (`page`, `limit`, `search`); authenticated `/mine` and `/mine/:id`; author-owned CRUD
 - `/api/users` — authenticated current-user profile
 - `/api/health` — process health
 
