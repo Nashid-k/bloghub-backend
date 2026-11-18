@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
 const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
+const { parsePage, parseLimit } = require('../utils/authorPagination');
 const {
   normalizeEmail,
   validateRegistration,
@@ -67,4 +68,16 @@ test('rejects malformed comment cursors and bounds page sizes', () => {
   assert.equal(normalizeCommentLimit('500'), 50);
   assert.equal(normalizeCommentLimit('0'), null);
   assert.equal(normalizeCommentLimit('2abc'), null);
+});
+
+test('validates public author story pagination boundaries', () => {
+  assert.equal(parsePage(undefined), 1);
+  assert.equal(parsePage('3'), 3);
+  assert.equal(parsePage('0'), null);
+  assert.equal(parsePage('1abc'), null);
+  assert.equal(parseLimit(undefined), 12);
+  assert.equal(parseLimit('20'), 20);
+  assert.equal(parseLimit('200'), 20);
+  assert.equal(parseLimit('0'), null);
+  assert.equal(parseLimit('4items'), null);
 });
