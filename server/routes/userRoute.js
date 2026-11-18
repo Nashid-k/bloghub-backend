@@ -9,7 +9,9 @@ const { getPublicAuthorProfile, followAuthor, unfollowAuthor, getAuthorFollowers
 
 router.get('/me', auth, getUserProfile);
 router.get('/bookmarks', auth, getBookmarks);
-router.get('/:userId/followers', getAuthorFollowers);\nrouter.get('/:userId/following', getAuthorFollowing);\nrouter.get('/:userId', optionalAuth, getPublicAuthorProfile);
+router.get('/:userId/followers', getAuthorFollowers);
+router.get('/:userId/following', getAuthorFollowing);
+router.get('/:userId', optionalAuth, getPublicAuthorProfile);
 router.post('/:userId/follow', auth, followAuthor);
 router.delete('/:userId/follow', auth, unfollowAuthor);
 
