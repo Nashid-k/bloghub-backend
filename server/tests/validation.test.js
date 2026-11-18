@@ -103,7 +103,7 @@ test('follow directory indexes support stable newest-first pagination', () => {
 
 test('bounds public author directory pagination inputs', () => {
   assert.equal(parsePage('100000'), 100000);
-  assert.equal(parsePage('100001'), 100001);
+  assert.equal(parsePage('100001'), null);
   assert.equal(parseLimit('20'), 20);
   assert.equal(parseLimit('21'), 20);
 });
