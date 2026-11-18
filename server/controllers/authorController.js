@@ -4,18 +4,7 @@ const Blog = require('../models/Blog');
 const Follow = require('../models/Follow');
 
 const publishedFilter = { $or: [{ status: 'published' }, { status: { $exists: false } }] };
-const parsePage = (value) => {
-  if (value === undefined) return 1;
-  if (!/^[0-9]+$/.test(String(value))) return null;
-  const page = Number(value);
-  return Number.isSafeInteger(page) && page >= 1 ? page : null;
-};
-const parseLimit = (value) => {
-  if (value === undefined) return 12;
-  if (!/^[0-9]+$/.test(String(value))) return null;
-  const limit = Number(value);
-  return Number.isSafeInteger(limit) && limit >= 1 ? Math.min(limit, 20) : null;
-};
+const { parsePage, parseLimit } = require('../utils/authorPagination');
 
 exports.getPublicAuthorProfile = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.userId)) {
@@ -63,7 +52,7 @@ exports.followAuthor = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.userId)) {
     return res.status(400).json({ error: 'Invalid author ID.' });
   }
-  if (req.params.userId === req.user._id.toString()) {
+  if (new mongoose.Types.ObjectId(req.params.userId).toString() === req.user._id.toString()) {
     return res.status(400).json({ error: 'You cannot follow your own account.' });
   }
   try {
