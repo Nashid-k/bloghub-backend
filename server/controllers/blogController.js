@@ -2,14 +2,17 @@ const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const { validatePost } = require('../utils/validation');
 
+const escapeRegex = (value) => [...value].map((character) => {
+  if ('\\\\^$.*+?()[]{}|'.includes(character)) return '\\\\' + character;
+  return character;
+}).join('');
+
 exports.getAllBlogs = async (req, res) => {
   try {
     const requestedLimit = Number.parseInt(req.query.limit, 10);
     const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 50) : 50;
     const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 100) : '';
-    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\    const filter = search
-      ? { $or: [{ title: { $regex: search, $options: 'i' } }, { content: { $regex: search, $options: 'i' } }] }
-      : {};');
+    const escapedSearch = escapeRegex(search);
     const filter = escapedSearch
       ? { $or: [{ title: { $regex: escapedSearch, $options: 'i' } }, { content: { $regex: escapedSearch, $options: 'i' } }] }
       : {};
@@ -61,8 +64,9 @@ exports.updateBlog = async (req, res) => {
       return res.status(403).json({ error: 'You can only edit your own stories.' });
     }
 
-    const nextTitle = req.body.title === undefined ? blog.title : req.body.title;
-    const nextContent = req.body.content === undefined ? blog.content : req.body.content;
+    const payload = req.body || {};
+    const nextTitle = payload.title === undefined ? blog.title : payload.title;
+    const nextContent = payload.content === undefined ? blog.content : payload.content;
     const validationError = validatePost({ title: nextTitle, content: nextContent });
     if (validationError) return res.status(400).json({ error: validationError });
 
