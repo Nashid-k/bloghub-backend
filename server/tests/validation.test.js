@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const mongoose = require('mongoose');
+const { encodeCommentCursor, decodeCommentCursor, normalizeCommentLimit } = require('../utils/commentPagination');
 const {
   normalizeEmail,
   validateRegistration,
@@ -47,4 +49,22 @@ test('rejects invalid publishing states and oversized metadata', () => {
   assert.match(validatePost({ title: 'A valid title', content: 'Body', excerpt: 'x'.repeat(241) }), /Excerpt/);
   assert.match(validatePost({ title: 'A valid title', content: 'Body', tags: Array(9).fill('topic') }), /tags/i);
   assert.match(validatePost({ title: 'A valid title', content: 'Body', tags: ['x'.repeat(25)] }), /tags/i);
+});
+
+test('encodes and decodes stable comment cursors', () => {
+  const comment = { _id: new mongoose.Types.ObjectId(), createdAt: new Date('2026-11-18T10:30:00.000Z') };
+  const cursor = encodeCommentCursor(comment);
+  const decoded = decodeCommentCursor(cursor);
+  assert.equal(decoded.id.toString(), comment._id.toString());
+  assert.equal(decoded.createdAt.toISOString(), comment.createdAt.toISOString());
+});
+
+test('rejects malformed comment cursors and bounds page sizes', () => {
+  assert.equal(decodeCommentCursor('not-a-cursor'), null);
+  assert.equal(decodeCommentCursor(Buffer.from(JSON.stringify({ createdAt: 'bad', id: 'invalid' })).toString('base64url')), null);
+  assert.equal(normalizeCommentLimit(undefined), 50);
+  assert.equal(normalizeCommentLimit('12'), 12);
+  assert.equal(normalizeCommentLimit('500'), 50);
+  assert.equal(normalizeCommentLimit('0'), null);
+  assert.equal(normalizeCommentLimit('2abc'), null);
 });
