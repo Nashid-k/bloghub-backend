@@ -17,6 +17,8 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Public author profiles with published-story pagination and follower/following counts
 - Public followers and following directories with bounded pagination and minimal profile fields
 - Persistent follow/unfollow relationships with unique-pair protection and self-follow prevention
+- Persistent notifications for new followers, comments, likes and bookmarks, excluding self-generated events
+- Authenticated notification inbox with cursor pagination, unread-only filtering, unread count and read-state updates
 - Public responses expose reaction counts rather than reader identity lists
 - Request size and CORS origin boundaries
 
@@ -73,6 +75,9 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 - `/api/blogs/comments/:commentId` — author/story-owner comment removal
 - `/api/users/me` — authenticated creator profile
 - `/api/users/bookmarks` — authenticated reading list
+- `GET /api/users/notifications?limit=20&cursor=...&unreadOnly=true` — authenticated newest-first notification inbox (maximum 50 per page); response includes `items` and `pagination.nextCursor`
+- `GET /api/users/notifications/unread-count` — authenticated unread notification count
+- `PATCH /api/users/notifications/:notificationId/read` and `PATCH /api/users/notifications/read-all` — mark one or all of the current user's notifications as read
 - `/api/users/:userId` — public author profile, published stories (`page`, `limit`), follower/following counts and optional signed-in follow state
 - `GET /api/users/:userId/followers?page=1&limit=12` and `GET /api/users/:userId/following?page=1&limit=12` — public, bounded directories (maximum 20 profiles per page)
 - `POST /api/users/:userId/follow` and `DELETE /api/users/:userId/follow` — authenticated, idempotent follow/unfollow
@@ -85,4 +90,4 @@ npm test
 node --check server.js
 ```
 
-The current unit suite covers request validation. Database-backed integration tests, comment moderation, notifications, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
+The current unit suite covers request validation. Database-backed integration tests, comment moderation, database-backed integration tests, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
