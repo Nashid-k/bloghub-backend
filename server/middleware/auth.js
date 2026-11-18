@@ -1,30 +1,27 @@
 const jwt = require('jsonwebtoken');
-const User =require('../models/User');
-
+const User = require('../models/User');
 
 const auth = async (req, res, next) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer', '').trim();
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return res.status(500).json({ error: 'Authentication is not configured.' });
+  }
 
-        if(!token){
-            return res.status(401).json({error: 'Access denied. No token provided'})
-        }
+  const authorization = req.get('Authorization') || '';
+  const [scheme, token] = authorization.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return res.status(401).json({ error: 'A valid Bearer token is required.' });
+  }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select('-password');
-
-        if(!user){
-             console.log('JWT error:', error.message);
-            return res.status(401).json({error:'Token is not valid'});
-        }
-
-        req.user = user;
-        next();
-        
-    } catch (error) {
-         console.log('JWT error:', error.message);
-        res.status(401).json({error:"Token is invalid"});
-    }
+  try {
+    const decoded = jwt.verify(token, secret);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return res.status(401).json({ error: 'The account for this token no longer exists.' });
+    req.user = user;
+    return next();
+  } catch {
+    return res.status(401).json({ error: 'Token is invalid or expired.' });
+  }
 };
 
 module.exports = auth;
