@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
     maxlength: 254,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Enter a valid email address'],
   },
+  bookmarks: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Blog' }], default: [] },
   password: {
     type: String,
     required: [true, 'Password is required'],

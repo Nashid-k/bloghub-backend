@@ -1,26 +1,19 @@
 const express = require('express');
 const router = express.Router();
-
-const auth = require('../middleware/auth')
-
-const {getAllBlogs,getBlogsById,createBlog,updateBlog,deleteBlog} = require('../controllers/blogController')
-
-
-
-
-
-
-
-
-router.get('/',getAllBlogs);
-router.get('/:id',getBlogsById);
-
-
-
+const auth = require('../middleware/auth');
+const { getAllBlogs, getBlogsById, getMyBlogs, getMyBlogById, createBlog, updateBlog, deleteBlog } = require('../controllers/blogController');
+const { getEngagement, toggleLike, getComments, createComment, deleteComment, toggleBookmark } = require('../controllers/engagementController');
+router.get('/', getAllBlogs);
+router.get('/mine', auth, getMyBlogs);
+router.get('/mine/:id', auth, getMyBlogById);
+router.get('/:id/comments', getComments);
+router.post('/:id/comments', auth, createComment);
+router.delete('/comments/:commentId', auth, deleteComment);
+router.get('/:id/engagement', auth, getEngagement);
+router.post('/:id/like', auth, toggleLike);
+router.post('/:id/bookmark', auth, toggleBookmark);
+router.get('/:id', getBlogsById);
 router.post('/', auth, createBlog);
 router.put('/:id', auth, updateBlog);
 router.delete('/:id', auth, deleteBlog);
-
-
-
 module.exports = router;
