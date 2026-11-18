@@ -118,7 +118,7 @@ const listAuthorConnections = async (req, res, direction) => {
 
     const [relationships, total] = await Promise.all([
       Follow.find(relationshipFilter)
-        .select(` ${profileField} createdAt`)
+        .select(`${profileField} createdAt`)
         .sort({ createdAt: -1, _id: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
