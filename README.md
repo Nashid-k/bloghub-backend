@@ -14,7 +14,8 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Creator profile with published/draft counts
 - Persistent likes and personal bookmarks with authenticated toggles
 - Article comments with author/owner deletion permissions and bounded cursor pagination (up to 50 per page)
-- Public author profiles with published-story pagination and follower/following counts\n- Public followers and following directories with bounded pagination and minimal profile fields
+- Public author profiles with published-story pagination and follower/following counts
+- Public followers and following directories with bounded pagination and minimal profile fields
 - Persistent follow/unfollow relationships with unique-pair protection and self-follow prevention
 - Public responses expose reaction counts rather than reader identity lists
 - Request size and CORS origin boundaries
@@ -73,7 +74,8 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 - `/api/users/me` — authenticated creator profile
 - `/api/users/bookmarks` — authenticated reading list
 - `/api/users/:userId` — public author profile, published stories (`page`, `limit`), follower/following counts and optional signed-in follow state
-- `GET /api/users/:userId/followers?page=1&limit=12` and `GET /api/users/:userId/following?page=1&limit=12` — public, bounded directories (maximum 20 profiles per page)\n- `POST /api/users/:userId/follow` and `DELETE /api/users/:userId/follow` — authenticated, idempotent follow/unfollow
+- `GET /api/users/:userId/followers?page=1&limit=12` and `GET /api/users/:userId/following?page=1&limit=12` — public, bounded directories (maximum 20 profiles per page)
+- `POST /api/users/:userId/follow` and `DELETE /api/users/:userId/follow` — authenticated, idempotent follow/unfollow
 - `/api/health` — process health
 
 ## Quality checks
