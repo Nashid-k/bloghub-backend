@@ -1,6 +1,6 @@
 # BlogHub API — Publishing Platform Backend
 
-The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mongoose. It currently provides JWT authentication, account profiles and author-owned story CRUD. The product roadmap describes the planned evolution toward a multi-author publishing platform; roadmap items are not yet implemented.
+The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mongoose. It provides JWT authentication, author-owned publishing, private drafts, paginated discovery, persistent likes, bookmarks and article discussion.
 
 ## Current capabilities
 
@@ -12,6 +12,9 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Server-side ownership checks for story edits and deletion
 - Bounded server-side pagination and escaped search across title, excerpt, body and tags
 - Creator profile with published/draft counts
+- Persistent likes and personal bookmarks with authenticated toggles
+- Article comments with author/owner deletion permissions
+- Public responses expose reaction counts rather than reader identity lists
 - Request size and CORS origin boundaries
 
 ## Stack
@@ -61,7 +64,12 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 
 - `/api/auth` — registration, login and logout response
 - `/api/blogs` — public published-story feed (`page`, `limit`, `search`); authenticated `/mine` and `/mine/:id`; author-owned CRUD
-- `/api/users` — authenticated current-user profile
+- `/api/blogs/:id/like` — authenticated like/unlike toggle
+- `/api/blogs/:id/bookmark` — authenticated save/unsave toggle
+- `/api/blogs/:id/comments` — public list and authenticated comment creation
+- `/api/blogs/comments/:commentId` — author/story-owner comment removal
+- `/api/users/me` — authenticated creator profile
+- `/api/users/bookmarks` — authenticated reading list
 - `/api/health` — process health
 
 ## Quality checks
@@ -71,4 +79,4 @@ npm test
 node --check server.js
 ```
 
-The test suite currently covers shared request validators. Database-backed integration tests and full role-based publishing workflows are planned in the BlogHub 2.0 roadmap.
+The current unit suite covers request validation. Database-backed integration tests, comment pagination/moderation, follow graphs, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
