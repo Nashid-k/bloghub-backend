@@ -14,6 +14,8 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Creator profile with published/draft counts
 - Persistent likes and personal bookmarks with authenticated toggles
 - Article comments with author/owner deletion permissions and bounded cursor pagination (up to 50 per page)
+- Public author profiles with published-story pagination and follower/following counts
+- Persistent follow/unfollow relationships with unique-pair protection and self-follow prevention
 - Public responses expose reaction counts rather than reader identity lists
 - Request size and CORS origin boundaries
 
@@ -70,6 +72,8 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 - `/api/blogs/comments/:commentId` — author/story-owner comment removal
 - `/api/users/me` — authenticated creator profile
 - `/api/users/bookmarks` — authenticated reading list
+- `/api/users/:userId` — public author profile, published stories (`page`, `limit`), follower/following counts and optional signed-in follow state
+- `POST /api/users/:userId/follow` and `DELETE /api/users/:userId/follow` — authenticated, idempotent follow/unfollow
 - `/api/health` — process health
 
 ## Quality checks
@@ -79,4 +83,4 @@ npm test
 node --check server.js
 ```
 
-The current unit suite covers request validation. Database-backed integration tests, comment moderation, follow graphs, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
+The current unit suite covers request validation. Database-backed integration tests, comment moderation, follower/following directory endpoints, notifications, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
