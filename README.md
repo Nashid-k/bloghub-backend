@@ -13,7 +13,7 @@ The BlogHub backend is a JavaScript REST API built with Express 5 and MongoDB/Mo
 - Bounded server-side pagination and escaped search across title, excerpt, body and tags
 - Creator profile with published/draft counts
 - Persistent likes and personal bookmarks with authenticated toggles
-- Article comments with author/owner deletion permissions
+- Article comments with author/owner deletion permissions and bounded cursor pagination (up to 50 per page)
 - Public responses expose reaction counts rather than reader identity lists
 - Request size and CORS origin boundaries
 
@@ -66,7 +66,7 @@ Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).t
 - `/api/blogs` — public published-story feed (`page`, `limit`, `search`); authenticated `/mine` and `/mine/:id`; author-owned CRUD
 - `/api/blogs/:id/like` — authenticated like/unlike toggle
 - `/api/blogs/:id/bookmark` — authenticated save/unsave toggle
-- `/api/blogs/:id/comments` — public list and authenticated comment creation
+- `/api/blogs/:id/comments` — public list and authenticated comment creation; pass `limit` (1–50) for a paginated `{ items, pagination }` response, then pass `pagination.nextCursor` as `cursor` to load the next page. Requests without pagination parameters retain the legacy array response (capped at 50 comments).
 - `/api/blogs/comments/:commentId` — author/story-owner comment removal
 - `/api/users/me` — authenticated creator profile
 - `/api/users/bookmarks` — authenticated reading list
@@ -79,4 +79,4 @@ npm test
 node --check server.js
 ```
 
-The current unit suite covers request validation. Database-backed integration tests, comment pagination/moderation, follow graphs, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
+The current unit suite covers request validation. Database-backed integration tests, comment moderation, follow graphs, and full role-based publishing workflows remain on the BlogHub 2.0 roadmap.
